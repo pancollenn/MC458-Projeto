@@ -42,7 +42,7 @@ class MatrizEsparsaHash():
         Retorna C = A + B
         em O(ka + kb)
         """
-        C = MatrizEsparsaHash(self.n, self.m)
+        C = MatrizEsparsaHash(self.n, B.m)
 
         # Adiciona os elementos de A em C em tempo O(ka)
         for (p_i, p_j), valor in self.data.items():
@@ -82,9 +82,54 @@ class MatrizEsparsaHash():
     def __matmul__(self, B):
         """
         Retorna C = A * B
-        em O(ka * db)
+        em O(kb + ka * db)
         """
+        if self.m != B.n:
+            raise ValueError(f"Dimensões incompatíveis para multiplicação")
         
+        # C é a matriz de resultado
+        C = MatrizEsparsaHash(self.n, B.m)
+
+        # Criamos um dicionário para acesso rápido às linhas de B
+        # em O(kb) esperado
+        # Estrutura: {indice_linha -> {indice_coluna: valor, ...}}
+        B_por_linha = {}
+        for (p_i_B, p_j_B), val_B in B.data.items():
+            if B.eh_transposta:
+                b_i, b_j = p_j_B, p_i_B
+            else:
+                b_i, b_j = p_i_B, p_j_B
+            
+            # Adiciona ao dicionário de linhas
+            if b_i not in B_por_linha:
+                B_por_linha[b_i] = {}
+            B_por_linha[b_i][b_j] = val_B
+
+        # Itera sobre A e usa o dicionário de linhas de B
+        # em O(ka * db) esperado
+        
+        for (p_i_A, p_j_A), val_A in self.data.items():
+            if self.eh_transposta:
+                a_i, a_j = p_j_A, p_i_A
+            else:
+                a_i, a_j = p_i_A, p_j_A
+            
+            # Agora, A[i, j] é multiplicado por todos os elementos da linha 'a_j' de B.
+            # Usamos nosso mapa para pegar a linha 'a_j' de B em O(1) esperado
+            if a_j in B_por_linha:
+                
+                # coluna_B_j contém {k: B[j, k], ...}
+                coluna_B_j = B_por_linha[a_j]
+                
+                # Itera apenas pelos dB elementos dessa linha
+                for b_k, val_B_k in coluna_B_j.items():
+                    # C[i, k] = C[i, k] + A[i, j] * B[j, k]
+                    C[a_i, b_k] = C[a_i, b_k] + (val_A * val_B_k)
+        
+        return C
+                
+
+            
     def transpor(self):
         """
         Retorna a matriz A "transposta"
