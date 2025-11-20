@@ -3,6 +3,7 @@ import sys
 import time
 
 from estrutura1 import MatrizEsparsaHash
+from estrutura2 import MatrizEsparsaArvore
 
 
 def criar_matriz_aleatoria(n, m, dados_esparsos):
@@ -49,6 +50,13 @@ def converter_estrutura_hash(n, m, dados):
     for i, j, valor in dados:
         matriz_hash[i, j] = valor
     return matriz_hash
+
+
+def converter_estrutura_arvore(n, m, dados):
+    matriz_arvore = MatrizEsparsaArvore(n, m)
+    for i, j, valor in dados:
+        matriz_arvore[i, j] = valor
+    return matriz_arvore
 
 
 def soma_matriz_tradicional(A, B, n, m):
@@ -115,7 +123,9 @@ def rodar_benchmarks():
             dados_B = gerar_dados_esparsos(n, n, p)
             k_A = len(dados_A)  # Número de elementos não nulos
 
+            # ========================================
             # Teste: Estrutura HASH
+            # ========================================
             matriz_hash_A = converter_estrutura_hash(n, n, dados_A)
             matriz_hash_B = converter_estrutura_hash(n, n, dados_B)
 
@@ -138,7 +148,35 @@ def rodar_benchmarks():
             print(linha_hash)  # Imprime no console
             f.write(linha_hash + "\n")  # Salva no arquivo
 
+            # ========================================
+            # Teste: Estrutura ÁRVORE AVL
+            # ========================================
+            matriz_arvore_A = converter_estrutura_arvore(n, n, dados_A)
+            matriz_arvore_B = converter_estrutura_arvore(n, n, dados_B)
+
+            # Calcula memória aproximada da árvore
+            memoria_arvore = sys.getsizeof(matriz_arvore_A.data)
+
+            inicio = time.perf_counter()
+            matriz_arvore_C = matriz_arvore_A + matriz_arvore_B
+            tempo_soma_arvore = time.perf_counter() - inicio
+
+            inicio = time.perf_counter()
+            matriz_arvore_D = matriz_arvore_A @ matriz_arvore_B
+            tempo_mult_arvore = time.perf_counter() - inicio
+
+            inicio = time.perf_counter()
+            matriz_arvore_E = matriz_arvore_A * ESCALAR_TESTE
+            tempo_mult_escalar_arvore = time.perf_counter() - inicio
+
+            # Formata a linha de dados como string CSV
+            linha_arvore = f"Arvore,{i},{n},{p:.10f},{k_A},{tempo_soma_arvore:.10f},{tempo_mult_arvore:.10f},{tempo_mult_escalar_arvore:.10f},{memoria_arvore}"
+            print(linha_arvore)  # Imprime no console
+            f.write(linha_arvore + "\n")  # Salva no arquivo
+
+            # ========================================
             # Teste: Matriz Tradicional (Bidimensional)
+            # ========================================
             if i < 4:
                 matriz_tradicional_A = criar_matriz_aleatoria(n, n, dados_A)
                 matriz_tradicional_B = criar_matriz_aleatoria(n, n, dados_B)

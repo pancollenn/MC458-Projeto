@@ -1,5 +1,3 @@
-import time
-
 class No:
     def __init__(self, chave: tuple[int, int], valor: int | float) -> None:
         self.chave: tuple[int, int] = chave
@@ -66,8 +64,9 @@ class Arvore:
 
         return no
 
-    def _inserir_recursivo(self, no: No | None, chave: tuple[int, int], 
-                          valor: int | float) -> No:
+    def _inserir_recursivo(
+        self, no: No | None, chave: tuple[int, int], valor: int | float
+    ) -> No:
         if no is None:
             self.tamanho += 1
             return No(chave, valor)
@@ -85,8 +84,7 @@ class Arvore:
     def inserir(self, chave: tuple[int, int], valor: int | float) -> None:
         self.raiz = self._inserir_recursivo(self.raiz, chave, valor)
 
-    def _buscar_recursivo(self, no: No | None, 
-                         chave: tuple[int, int]) -> No | None:
+    def _buscar_recursivo(self, no: No | None, chave: tuple[int, int]) -> No | None:
         if no is None:
             return None
 
@@ -110,8 +108,7 @@ class Arvore:
             atual = atual.esquerda
         return atual
 
-    def _remover_recursivo(self, no: No | None, 
-                          chave: tuple[int, int]) -> No | None:
+    def _remover_recursivo(self, no: No | None, chave: tuple[int, int]) -> No | None:
         if no is None:
             return no
 
@@ -166,7 +163,7 @@ class MatrizEsparsaArvore:
     def __init__(self, n: int, m: int) -> None:
         self.n: int = n
         self.m: int = m
-        self.data: Arvore = Arvore()  
+        self.data: Arvore = Arvore()
         self.eh_transposta: bool = False
 
     def _get_pos(self, i: int, j: int) -> tuple[int, int]:
@@ -176,17 +173,12 @@ class MatrizEsparsaArvore:
             return (i, j)
 
     def __getitem__(self, tupla_pos: tuple[int, int]) -> int | float:
-        inicio = time.perf_counter()
         i, j = tupla_pos
         chave: tuple[int, int] = self._get_pos(i, j)
         valor: int | float | None = self.data.buscar(chave)
-        fim = time.perf_counter()
-        print(f"Tempo de execução Getitem - Arvore: {fim - inicio}")
         return valor if valor is not None else 0
 
-    def __setitem__(self, tupla_pos: tuple[int, int], 
-                    valor: int | float) -> None:
-        inicio = time.perf_counter()
+    def __setitem__(self, tupla_pos: tuple[int, int], valor: int | float) -> None:
         i, j = tupla_pos
         chave: tuple[int, int] = self._get_pos(i, j)
         if valor != 0:
@@ -194,11 +186,8 @@ class MatrizEsparsaArvore:
         else:
             if self.data.contem(chave):
                 self.data.remover(chave)
-        fim = time.perf_counter()
-        print(f"Tempo de execução Setitem - Arvore: {fim - inicio}")
 
-    def __add__(self, B: 'MatrizEsparsaArvore') -> 'MatrizEsparsaArvore':
-        inicio = time.perf_counter()
+    def __add__(self, B: "MatrizEsparsaArvore") -> "MatrizEsparsaArvore":
         if self.n != B.n or self.m != B.m:
             raise ValueError("Matrizes devem ter mesmas dimensões")
 
@@ -216,32 +205,23 @@ class MatrizEsparsaArvore:
                 i, j = (p_j, p_i)
             else:
                 i, j = (p_i, p_j)
-            C[i, j] = C[i, j] + valor  
-        fim = time.perf_counter()
-        print(f"Tempo de execução Add - Arvore: {fim - inicio}")
+            C[i, j] = C[i, j] + valor
         return C
 
-    def __mul__(self, escalar: int | float) -> 'MatrizEsparsaArvore':
-        inicio = time.perf_counter()
+    def __mul__(self, escalar: int | float) -> "MatrizEsparsaArvore":
         C: MatrizEsparsaArvore = MatrizEsparsaArvore(self.n, self.m)
         C.eh_transposta = self.eh_transposta
 
         elementos: list = list(self.data.items())
         for chave, valor in elementos:
             C.data.inserir(chave, valor * escalar)
-        fim = time.perf_counter()
-        print(f"Tempo de execução Mul - Arvore: {fim - inicio}")
         return C
 
-    def __rmul__(self, escalar: int | float) -> 'MatrizEsparsaArvore':
-        inicio = time.perf_counter()
+    def __rmul__(self, escalar: int | float) -> "MatrizEsparsaArvore":
         result = self.__mul__(escalar)
-        fim = time.perf_counter()
-        print(f"Tempo de execução Rmul - Arvore: {fim - inicio}")
         return result
 
-    def __matmul__(self, B: 'MatrizEsparsaArvore') -> 'MatrizEsparsaArvore':
-        inicio = time.perf_counter()
+    def __matmul__(self, B: "MatrizEsparsaArvore") -> "MatrizEsparsaArvore":
         if self.m != B.n:
             raise ValueError(
                 f"Dimensões incompatíveis: ({self.n}x{self.m}) @ ({B.n}x{B.m})"
@@ -263,22 +243,15 @@ class MatrizEsparsaArvore:
 
                 if k == k2:
                     C[i, j] = C[i, j] + valor_a * valor_b
-        fim = time.perf_counter()
-        print(f"Tempo de execução Matmul - Arvore: {fim - inicio}")
         return C
 
-    def transpor(self) -> 'MatrizEsparsaArvore':
-        inicio = time.perf_counter()
+    def transpor(self) -> "MatrizEsparsaArvore":
         transposta: MatrizEsparsaArvore = MatrizEsparsaArvore(self.m, self.n)
         transposta.data = self.data
         transposta.eh_transposta = not self.eh_transposta
-        fim = time.perf_counter()
-        print(f"Tempo de execução Transpor - Arvore: {fim - inicio}")
         return transposta
 
     def k(self) -> int:
-        inicio = time.perf_counter()
         result = len(self.data)
-        fim = time.perf_counter()
-        print(f"Tempo de execução NumeroElementos - Arvore: {fim - inicio}")
         return result
+
