@@ -223,26 +223,40 @@ class MatrizEsparsaArvore:
 
     def __matmul__(self, B: "MatrizEsparsaArvore") -> "MatrizEsparsaArvore":
         if self.m != B.n:
-            raise ValueError(
-                f"Dimensões incompatíveis: ({self.n}x{self.m}) @ ({B.n}x{B.m})"
-            )
+            raise ValueError(f"Dimensões incompatíveis")
 
         C: MatrizEsparsaArvore = MatrizEsparsaArvore(self.n, B.m)
 
+        # Criamos um dicionário para acesso rápido às linhas de B
+        # em O(kb * log kb) esperado
+        # Estrutura: {indice_linha -> {indice_coluna: valor, ...}}
+        B_por_linha = {}
+        for (p_k, p_j), valor_b in B.data.items():
+            if B.eh_transposta:
+                k, j = (p_j, p_k)
+            else:
+                k, j = (p_k, p_j)
+            
+            if k not in B_por_linha:
+                B_por_linha[k] = []
+            B_por_linha[k].append((j, valor_b))
+
+        # Itera sobre A e usa o dicionário de linhas de B
+        # em O(kA * dB * log kC)
         for (p_i, p_k), valor_a in self.data.items():
+            # Ajusta coordenadas lógicas de A
             if self.eh_transposta:
                 i, k = (p_k, p_i)
             else:
                 i, k = (p_i, p_k)
 
-            for (p_k2, p_j), valor_b in B.data.items():
-                if B.eh_transposta:
-                    k2, j = (p_j, p_k2)
-                else:
-                    k2, j = (p_k2, p_j)
+            if k in B_por_linha:
+                for (j, valor_b) in B_por_linha[k]:
+                    # Insere/Soma na árvore de resultado
+                    # C[i, j] internamente faz busca e inserção O(log k)
+                    valor_atual = C[i, j]
+                    C[i, j] = valor_atual + valor_a * valor_b
 
-                if k == k2:
-                    C[i, j] = C[i, j] + valor_a * valor_b
         return C
 
     def transpor(self) -> "MatrizEsparsaArvore":

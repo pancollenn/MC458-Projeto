@@ -151,6 +151,7 @@ def rodar_benchmarks():
             # ========================================
             # Teste: Estrutura ÁRVORE AVL
             # ========================================
+ 
             matriz_arvore_A = converter_estrutura_arvore(n, n, dados_A)
             matriz_arvore_B = converter_estrutura_arvore(n, n, dados_B)
 
